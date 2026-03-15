@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit"
+  },
+  "jest": {
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"]
   },
   "keywords": [],
   "author": "",
