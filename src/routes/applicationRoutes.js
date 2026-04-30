@@ -1,5 +1,5 @@
 const express = require('express');
-const { 
+const {
     getApplications,
     getApplicationById,
     createApplication,
@@ -7,6 +7,8 @@ const {
     deleteApplication
 } = require('../controllers/applicationController');
 const { authenticateToken } = require('../middlewares/authMiddleware');
+const validate = require('../middlewares/validate');
+const { createApplicationSchema, updateApplicationSchema } = require('../validation/applicationSchemas');
 
 const router = express.Router();
 
@@ -81,7 +83,7 @@ router.get('/:id', getApplicationById);
  *       201:
  *         description: Created
  */
-router.post('/', createApplication);
+router.post('/', validate(createApplicationSchema), createApplication);
 
 /**
  * @swagger
@@ -113,7 +115,7 @@ router.post('/', createApplication);
  *       200:
  *         description: Updated
  */
-router.put('/:id', updateApplication);
+router.put('/:id', validate(updateApplicationSchema), updateApplication);
 
 /**
  * @swagger

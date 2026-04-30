@@ -1,4 +1,14 @@
 node_modules/
 .env
+agents/.env
+*.env.local
 coverage/
 .DS_Store
+logs/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.idea/
+.vscode/
