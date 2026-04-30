@@ -1,0 +1,27 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.0
+pydantic-settings==2.5.2
+
+# LangGraph + LangChain core
+langgraph==0.2.45
+langchain==0.3.7
+langchain-core==0.3.15
+
+# LLM providers — all free-tier compatible
+# Primary: Groq (free tier, no credit card, Llama 3.3 70B at ~500 tok/s)
+langchain-groq==0.2.0
+
+# Optional alternatives (uncomment to use):
+# Gemini free tier (Google AI Studio)
+# langchain-google-genai==2.0.4
+# Ollama (fully local, fully free)
+# langchain-ollama==0.2.0
+
+# HTTP
+httpx==0.27.2
+python-dotenv==1.0.1
+
+# Testing
+pytest==8.3.0
+pytest-asyncio==0.24.0
