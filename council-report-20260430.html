@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Council Report — DevTrack Agent Architecture</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; color: #1a1a1a; line-height: 1.6; }
+  .header { background: #0f172a; color: white; padding: 2rem 2.5rem; }
+  .header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+  .header .subtitle { color: #94a3b8; font-size: 0.9rem; margin-top: 0.25rem; }
+  .header .question { background: #1e293b; border-left: 3px solid #3b82f6; padding: 0.75rem 1rem; margin-top: 1rem; border-radius: 0 6px 6px 0; font-size: 0.9rem; color: #cbd5e1; }
+  .container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* Verdict */
+  .verdict { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .verdict-header { background: #0f172a; color: white; padding: 1rem 1.5rem; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .verdict-body { padding: 1.5rem; }
+  .verdict-section { margin-bottom: 1.5rem; }
+  .verdict-section:last-child { margin-bottom: 0; }
+  .verdict-section h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 0.5rem; }
+  .verdict-section p, .verdict-section li { font-size: 0.95rem; color: #334155; }
+  .verdict-section ul { padding-left: 1.25rem; }
+  .verdict-section ul li { margin-bottom: 0.35rem; }
+  .highlight { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 1rem 1.25rem; margin-top: 0.5rem; }
+  .highlight p { color: #1e40af; font-weight: 500; }
+  .action-box { background: #f0fdf4; border: 2px solid #16a34a; border-radius: 8px; padding: 1rem 1.25rem; margin-top: 0.5rem; }
+  .action-box p { color: #15803d; font-weight: 600; }
+
+  /* Agreement visual */
+  .alignment-grid { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .alignment-grid h2 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 1rem; }
+  .grid-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .grid-table th { text-align: left; padding: 0.5rem 0.75rem; background: #f1f5f9; color: #475569; font-weight: 600; font-size: 0.78rem; }
+  .grid-table td { padding: 0.6rem 0.75rem; border-top: 1px solid #f1f5f9; vertical-align: middle; }
+  .grid-table tr:hover td { background: #fafafa; }
+  .advisor-name { font-weight: 600; color: #1e293b; }
+  .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+  .agree { background: #dcfce7; color: #15803d; }
+  .disagree { background: #fee2e2; color: #b91c1c; }
+  .neutral { background: #f1f5f9; color: #475569; }
+
+  /* Advisor cards */
+  .section-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 1rem; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+  @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+  details { background: white; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  details summary { padding: 0.875rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.6rem; font-weight: 600; font-size: 0.9rem; list-style: none; user-select: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: '▸'; font-size: 0.7rem; color: #94a3b8; transition: transform 0.2s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  .advisor-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.15rem 0.5rem; border-radius: 999px; margin-left: auto; }
+  .tag-contrarian { background: #fee2e2; color: #b91c1c; }
+  .tag-principles { background: #ede9fe; color: #6d28d9; }
+  .tag-expansionist { background: #ecfdf5; color: #065f46; }
+  .tag-outsider { background: #fff7ed; color: #9a3412; }
+  .tag-executor { background: #eff6ff; color: #1d4ed8; }
+  .card-body { padding: 0.875rem 1rem 1rem; border-top: 1px solid #f1f5f9; font-size: 0.875rem; color: #475569; }
+  .card-body p { margin-bottom: 0.6rem; }
+  .card-body p:last-child { margin-bottom: 0; }
+
+  /* Peer reviews */
+  .reviews { margin-bottom: 2rem; }
+  .review-item { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-size: 0.875rem; }
+  .review-item strong { color: #0f172a; }
+  .review-meta { font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.4rem; }
+
+  /* Footer */
+  .footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #94a3b8; border-top: 1px solid #e2e8f0; margin-top: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>LLM Council Report</h1>
+  <div class="subtitle">5 advisors · 5 peer reviews · 1 chairman synthesis · 2026-04-30</div>
+  <div class="question">What agent capabilities and architectural decisions maximize hiring signal for DevTrack as an AI Engineer / MLOps portfolio project targeting Sydney's mid-to-large engineering companies?</div>
+</div>
+
+<div class="container">
+
+  <!-- VERDICT -->
+  <div class="verdict">
+    <div class="verdict-header">Chairman's Verdict</div>
+    <div class="verdict-body">
+
+      <div class="verdict-section">
+        <h3>Where the Council Agrees</h3>
+        <ul>
+          <li>One agent that works flawlessly beats three agents that are impressive on paper.</li>
+          <li>Failure modes are the interview — not the feature list, not the agent count.</li>
+          <li>Hirers probe 3 things: failure modes, cost awareness, cold explainability (10 min, no README).</li>
+          <li>The README and demo video are load-bearing artifacts, not afterthoughts.</li>
+        </ul>
+      </div>
+
+      <div class="verdict-section">
+        <h3>Where the Council Clashes</h3>
+        <ul>
+          <li><strong>CrewAI vs LangGraph:</strong> Executor says use both. Contrarian says using both is a red flag to senior engineers — signals tutorial-following without design understanding. <em>Chairman sides with Contrarian: pick LangGraph only.</em></li>
+          <li><strong>"Living artifact" vs frozen demo:</strong> Expansionist says use your real job search data. Three peer reviewers flagged this as high-variance — a live demo that breaks collapses the whole story. <em>Freeze it with realistic seed data. The story is still true.</em></li>
+          <li><strong>React dashboard timing:</strong> Executor says build it last. Outsider says skip Phase 1 entirely. <em>Outsider wins: Swagger UI is more credible to engineering audiences for Phase 1.</em></li>
+        </ul>
+      </div>
+
+      <div class="verdict-section">
+        <h3>Blind Spots the Council Caught</h3>
+        <ul>
+          <li><strong>Visa filter shapes the target audience:</strong> Sydney AI hiring = fintech, govtech, professional services. These orgs value reliability, audit trails, cost-bounded explainable agents — not demo novelty.</li>
+          <li><strong>Fishburners leads; DevTrack supports:</strong> Your internship building real agentic pipelines is the stronger credential. Frame DevTrack as "the engineering depth behind what I'm doing at Fishburners."</li>
+          <li><strong>GitHub commit history is a credential:</strong> Don't squash commits. Debugging iterations in the history signal engineering process before anyone reads the code.</li>
+          <li><strong>Polyglot = demo risk:</strong> Node.js → Python FastAPI → LangGraph = 3 failure boundaries. Build the Python service to be demoable in isolation. The Node.js integration is a bonus.</li>
+        </ul>
+      </div>
+
+      <div class="verdict-section">
+        <h3>The Recommendation</h3>
+        <div class="highlight">
+          <p>Build ONE LangGraph StateGraph (4 nodes: fetch profile → fetch JD → gap analysis → talking points). Add a circuit breaker at gap_analysis. Surface token_cost_usd in every response. Build a /runs/{run_id} endpoint returning full state transition trace. Add a "Failure modes and what I learned" section to the README.</p>
+        </div>
+        <p style="margin-top:0.75rem; font-size:0.875rem; color:#64748b;">Do NOT build in Phase 1: CrewAI alongside LangGraph · Interview Prep crew · Ollama fallback · React dashboard · RAG pipeline</p>
+      </div>
+
+      <div class="verdict-section">
+        <h3>The One Thing to Do First</h3>
+        <div class="action-box">
+          <p>Before writing a single line of Python: set a 10-minute timer and write the cold explanation — architecture, key design decisions, what breaks first under load — as if speaking to a senior engineer interviewing you. If you can't write it clearly in 10 minutes, you don't yet know what to build.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ALIGNMENT GRID -->
+  <div class="alignment-grid">
+    <h2>Advisor Positions at a Glance</h2>
+    <table class="grid-table">
+      <thead>
+        <tr>
+          <th>Advisor</th>
+          <th>Use LangGraph only?</th>
+          <th>Skip React (Phase 1)?</th>
+          <th>Demo video?</th>
+          <th>Multi-agent justified?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="advisor-name">The Contrarian</span></td>
+          <td><span class="badge agree">Yes</span></td>
+          <td><span class="badge agree">Yes — skip dashboard</span></td>
+          <td><span class="badge neutral">Not mentioned</span></td>
+          <td><span class="badge disagree">No — single agent</span></td>
+        </tr>
+        <tr>
+          <td><span class="advisor-name">First Principles</span></td>
+          <td><span class="badge agree">Yes</span></td>
+          <td><span class="badge agree">Yes</span></td>
+          <td><span class="badge neutral">Not mentioned</span></td>
+          <td><span class="badge disagree">No — explain it first</span></td>
+        </tr>
+        <tr>
+          <td><span class="advisor-name">The Expansionist</span></td>
+          <td><span class="badge neutral">Agnostic</span></td>
+          <td><span class="badge neutral">Not addressed</span></td>
+          <td><span class="badge neutral">Implied</span></td>
+          <td><span class="badge agree">Yes — instrument all</span></td>
+        </tr>
+        <tr>
+          <td><span class="advisor-name">The Outsider</span></td>
+          <td><span class="badge agree">Yes</span></td>
+          <td><span class="badge agree">Yes — use Swagger</span></td>
+          <td><span class="badge agree">Critical</span></td>
+          <td><span class="badge disagree">No — one agent</span></td>
+        </tr>
+        <tr>
+          <td><span class="advisor-name">The Executor</span></td>
+          <td><span class="badge disagree">No — use both</span></td>
+          <td><span class="badge neutral">Build last</span></td>
+          <td><span class="badge neutral">Not mentioned</span></td>
+          <td><span class="badge agree">Yes — 2-agent crew</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ADVISOR CARDS -->
+  <p class="section-title">Advisor Responses (click to expand)</p>
+  <div class="cards">
+
+    <details>
+      <summary>
+        The Contrarian
+        <span class="advisor-tag tag-contrarian">Contrarian</span>
+      </summary>
+      <div class="card-body">
+        <p>The fatal flaw nobody is saying: this project is a job tracker that tracks job applications. You are the target user. Recruiters will see a productivity app with an AI wrapper — not an AI Engineer signal.</p>
+        <p>CrewAI + LangGraph together is a red flag. They solve overlapping problems with different abstractions. Pick LangGraph — it's lower-level and more production-realistic.</p>
+        <p>"Ollama fallback" admits your architecture doesn't require strong reasoning. The three-crew structure is arbitrary — none of those tasks require multi-agent orchestration.</p>
+        <p><strong>Build one agent that does one thing provably well.</strong> That is harder and more impressive.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        First Principles Thinker
+        <span class="advisor-tag tag-principles">Principles</span>
+      </summary>
+      <div class="card-body">
+        <p>Hirers evaluate 3 things: (1) failure modes — circuit breakers, tool call depth limits, hallucination handling; (2) cost awareness — token budget, retry logic, backoff; (3) cold explainability — architecture in 10 min, no README.</p>
+        <p>You are not building an impressive project. You are building a conversation piece that makes you hireable. Those are different optimization targets.</p>
+        <p>Don't cargo-cult multi-agent patterns without understanding the tradeoff against simpler chain-of-thought. That's the most common junior AI engineer mistake right now.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        The Expansionist
+        <span class="advisor-tag tag-expansionist">Expansionist</span>
+      </summary>
+      <div class="card-body">
+        <p>Three agents and a dashboard is a 2024 portfolio. The biggest multiplier: instrument everything and surface the trace. Show token costs per run. Build a /runs endpoint.</p>
+        <p>The Anthropic + Ollama fallback is your MLOps story — document latency, cost, and quality deltas. Ship a comparison table. System design conversation starter.</p>
+        <p>DevTrack is a living artifact of your own job search. If you get hired partly because of it — that's a case study, not a portfolio project. Set the ceiling higher.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        The Outsider
+        <span class="advisor-tag tag-outsider">Outsider</span>
+      </summary>
+      <div class="card-body">
+        <p>"DevTrack API" tells me nothing about AI. Fix that first. Rename to "DevTrack: Agentic Job Intelligence API." I should know within 3 seconds.</p>
+        <p><strong>The demo video is the portfolio.</strong> 90-second recording pinned to README. No demo video = project doesn't exist.</p>
+        <p>The thing that separates you: show a decision the agent made, explain why it was wrong, show how you fixed the prompt or graph edge. The project isn't the code — it's the story you tell about the code.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        The Executor
+        <span class="advisor-tag tag-executor">Executor</span>
+      </summary>
+      <div class="card-body">
+        <p>Build in order: (1) Job Research Crew — 2 CrewAI agents, triggered automatically on application creation. (2) LangGraph 4-node StateGraph. (3) React dashboard last — minimal.</p>
+        <p>Don't build: Interview Prep crew, Ollama fallback, RAG pipeline, Docker Compose with 8 services.</p>
+        <p>The hiring signal: Node.js API → Python microservice → multiple AI agents → structured JSON. One working demo beats three half-built features. Build the CrewAI crew this weekend.</p>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- PEER REVIEWS -->
+  <details style="margin-bottom:2rem;">
+    <summary style="background:white; border-radius:10px; border:1px solid #e2e8f0; padding:0.875rem 1rem;">
+      Peer Review Highlights
+      <span class="advisor-tag neutral" style="background:#f1f5f9;color:#475569;margin-left:auto;">5 reviewers</span>
+    </summary>
+    <div style="padding:1rem 0.25rem;">
+      <div class="review-item">
+        <div class="review-meta">Reviewer 1</div>
+        <p><strong>Strongest:</strong> First Principles (D) — gives the clearest hiring-panel mental model. <strong>Biggest blind spot:</strong> Contrarian recommends Jupyter notebook — wrong signal for AI Engineer roles. <strong>All missed:</strong> Visa/sponsorship context. The portfolio needs to impress companies that can run a 482 TSS process, not startups.</p>
+      </div>
+      <div class="review-item">
+        <div class="review-meta">Reviewer 2</div>
+        <p><strong>Strongest:</strong> First Principles (D). <strong>Biggest blind spot:</strong> Expansionist — compelling narrative, no implementation guidance, risks unfocused ambition. <strong>All missed:</strong> Fishburners internship may be the stronger credential. DevTrack should support it, not lead.</p>
+      </div>
+      <div class="review-item">
+        <div class="review-meta">Reviewer 3</div>
+        <p><strong>Strongest:</strong> First Principles (D). <strong>Biggest blind spot:</strong> Expansionist — "living artifact" is perpetually incomplete, hard to freeze for portfolio. <strong>All missed:</strong> Polyglot architecture risk — Node.js + Python + LangGraph = 3 failure boundaries at demo time.</p>
+      </div>
+      <div class="review-item">
+        <div class="review-meta">Reviewer 4</div>
+        <p><strong>Strongest:</strong> First Principles (D). <strong>Biggest blind spot:</strong> Expansionist — high-variance "got hired because of this" story collapses if demo breaks. <strong>All missed:</strong> GitHub commit history signals engineering process. Don't squash commits. Show the debugging work.</p>
+      </div>
+      <div class="review-item">
+        <div class="review-meta">Reviewer 5</div>
+        <p><strong>Strongest:</strong> First Principles (D). <strong>Biggest blind spot:</strong> Executor — gives build order but no differentiation answer; "Node.js calling Python calling agents" is table stakes by 2026. <strong>All missed:</strong> Sydney market = fintech/govtech/professional services. Reliability and explainability over novelty.</p>
+      </div>
+    </div>
+  </details>
+
+</div>
+
+<div class="footer">
+  LLM Council · DevTrack Agent Architecture · 2026-04-30 · Unanimous strongest: The First Principles Thinker
+</div>
+
+</body>
+</html>

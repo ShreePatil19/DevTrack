@@ -9,7 +9,9 @@
     "test": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit"
   },
   "jest": {
-    "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"]
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.js"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -26,6 +28,7 @@
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0",
     "redis": "^5.11.0",
+    "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.19.0",
     "yaml": "^2.8.2"
