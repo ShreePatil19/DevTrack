@@ -78,7 +78,8 @@ async def test_successful_run():
     # On free providers, cost is 0 — assert it's a number, not necessarily > 0
     assert isinstance(result["execution_metadata"]["token_cost_usd"], (int, float))
     nodes = result["execution_metadata"]["nodes_executed"]
-    assert "gap_analysis" in nodes
+    # Node is registered as "analyze_gap" — state key uses "gap_analysis"
+    assert "analyze_gap" in nodes
     assert "talking_points" in nodes
 
 

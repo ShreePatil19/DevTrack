@@ -257,8 +257,10 @@ def fetch_job_description(state: JobIntelligenceState) -> dict:
 # ─────────────────────────────────────────────────────────────
 
 def gap_analysis(state: JobIntelligenceState) -> dict:
+    # Note: node is registered as "analyze_gap" — LangGraph forbids node names
+    # matching state keys, and "gap_analysis" is already a state field.
     t0 = time.monotonic()
-    node_name = "gap_analysis"
+    node_name = "analyze_gap"
     retries = state.get("gap_analysis_retries", 0)
     logger.info(f"[{state['run_id']}] Node: {node_name} (attempt {retries + 1})")
 
@@ -399,7 +401,7 @@ def _route_after_gap_analysis(state: JobIntelligenceState) -> str:
     if not state.get("circuit_breaker_triggered"):
         return "talking_points"
     if state.get("gap_analysis_retries", 0) < 2:
-        return "gap_analysis"  # retry
+        return "analyze_gap"  # retry — node name (state key collision avoidance)
     return "handle_error"
 
 
@@ -412,21 +414,21 @@ def _build_graph() -> Any:
 
     g.add_node("fetch_profile", fetch_profile)
     g.add_node("fetch_job_description", fetch_job_description)
-    g.add_node("gap_analysis", gap_analysis)
+    g.add_node("analyze_gap", gap_analysis)  # node name differs from state key "gap_analysis"
     g.add_node("talking_points", talking_points)
     g.add_node("handle_error", handle_error)
 
     g.set_entry_point("fetch_profile")
     g.add_edge("fetch_profile", "fetch_job_description")
-    g.add_edge("fetch_job_description", "gap_analysis")
+    g.add_edge("fetch_job_description", "analyze_gap")
 
     # Conditional edge: retry loop or proceed
     g.add_conditional_edges(
-        "gap_analysis",
+        "analyze_gap",
         _route_after_gap_analysis,
         {
             "talking_points": "talking_points",
-            "gap_analysis": "gap_analysis",
+            "analyze_gap": "analyze_gap",   # retry edge
             "handle_error": "handle_error",
         },
     )
