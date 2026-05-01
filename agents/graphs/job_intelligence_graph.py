@@ -331,8 +331,10 @@ def gap_analysis(state: JobIntelligenceState) -> dict:
 # ─────────────────────────────────────────────────────────────
 
 def talking_points(state: JobIntelligenceState) -> dict:
+    # Node is registered as "generate_talking_points" — same state-key
+    # collision avoidance as analyze_gap. State key "talking_points" stays.
     t0 = time.monotonic()
-    node_name = "talking_points"
+    node_name = "generate_talking_points"
     logger.info(f"[{state['run_id']}] Node: {node_name}")
 
     input_snap = {"gap_analysis_fit_score": state.get("gap_analysis", {}).get("fit_score")}
@@ -399,7 +401,7 @@ def handle_error(state: JobIntelligenceState) -> dict:
 
 def _route_after_gap_analysis(state: JobIntelligenceState) -> str:
     if not state.get("circuit_breaker_triggered"):
-        return "talking_points"
+        return "generate_talking_points"
     if state.get("gap_analysis_retries", 0) < 2:
         return "analyze_gap"  # retry — node name (state key collision avoidance)
     return "handle_error"
@@ -414,8 +416,8 @@ def _build_graph() -> Any:
 
     g.add_node("fetch_profile", fetch_profile)
     g.add_node("fetch_job_description", fetch_job_description)
-    g.add_node("analyze_gap", gap_analysis)  # node name differs from state key "gap_analysis"
-    g.add_node("talking_points", talking_points)
+    g.add_node("analyze_gap", gap_analysis)                  # state key: gap_analysis
+    g.add_node("generate_talking_points", talking_points)    # state key: talking_points
     g.add_node("handle_error", handle_error)
 
     g.set_entry_point("fetch_profile")
@@ -427,13 +429,13 @@ def _build_graph() -> Any:
         "analyze_gap",
         _route_after_gap_analysis,
         {
-            "talking_points": "talking_points",
+            "generate_talking_points": "generate_talking_points",
             "analyze_gap": "analyze_gap",   # retry edge
             "handle_error": "handle_error",
         },
     )
 
-    g.add_edge("talking_points", END)
+    g.add_edge("generate_talking_points", END)
     g.add_edge("handle_error", END)
 
     return g.compile()

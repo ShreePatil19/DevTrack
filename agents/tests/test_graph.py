@@ -78,9 +78,10 @@ async def test_successful_run():
     # On free providers, cost is 0 — assert it's a number, not necessarily > 0
     assert isinstance(result["execution_metadata"]["token_cost_usd"], (int, float))
     nodes = result["execution_metadata"]["nodes_executed"]
-    # Node is registered as "analyze_gap" — state key uses "gap_analysis"
+    # Nodes are registered as "analyze_gap" and "generate_talking_points"
+    # to avoid LangGraph collision with same-named state keys.
     assert "analyze_gap" in nodes
-    assert "talking_points" in nodes
+    assert "generate_talking_points" in nodes
 
 
 @pytest.mark.asyncio
