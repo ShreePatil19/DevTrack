@@ -12,10 +12,15 @@ const dbConfig = {
     connectionTimeoutMillis: 2000,
 };
 
-// Allow connection string for render / neon deployments
+// Allow connection string for Render / Neon / Supabase deployments
 if (process.env.DATABASE_URL) {
     dbConfig.connectionString = process.env.DATABASE_URL;
-    dbConfig.ssl = { rejectUnauthorized: false }; // Required for many hosted DBs
+    // SSL is required by managed DBs (Neon, Supabase) but breaks against
+    // CI postgres service containers and local docker-compose (plain TCP).
+    // Opt in via NODE_ENV=production OR DB_SSL=true.
+    if (process.env.NODE_ENV === 'production' || process.env.DB_SSL === 'true') {
+        dbConfig.ssl = { rejectUnauthorized: false };
+    }
 }
 
 const pool = new Pool(dbConfig);
