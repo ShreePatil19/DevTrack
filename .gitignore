@@ -12,3 +12,9 @@ __pycache__/
 venv/
 .idea/
 .vscode/
+
+# Next.js frontend build artifacts
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/next-env.d.ts
