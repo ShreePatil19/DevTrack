@@ -38,10 +38,14 @@ setupSwagger(app);
 const authRoutes = require('./routes/authRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 const agentRoutes = require('./routes/agentRoutes');
+const jobRoutes = require('./routes/jobRoutes');
+const resumeRoutes = require('./routes/resumeRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/agents', agentRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/resumes', resumeRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

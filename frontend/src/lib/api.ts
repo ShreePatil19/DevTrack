@@ -97,6 +97,30 @@ export interface Application {
   updated_at: string;
 }
 
+export interface Job {
+  id: string;
+  title: string;
+  company: string;
+  description: string | null;
+  location: string | null;
+  job_url: string | null;
+  source: string;
+  is_active: boolean;
+  posted_at: string;
+  created_at: string;
+}
+
+export interface Resume {
+  id: string;
+  user_id: string;
+  name: string;
+  file_url: string;
+  version: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AgentAnalyzeResponse {
   data: {
     gap_analysis: {
@@ -198,6 +222,58 @@ export const agents = {
 
   getRun: (run_id: string) =>
     request<AgentRunTrace>(`/api/agents/runs/${run_id}`),
+};
+
+// ─── Jobs ────────────────────────────────────────────────────────
+
+export const jobs = {
+  list: (params?: { search?: string; location?: string; limit?: number; offset?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.set("search", params.search);
+    if (params?.location) qs.set("location", params.location);
+    if (params?.limit != null) qs.set("limit", String(params.limit));
+    if (params?.offset != null) qs.set("offset", String(params.offset));
+    const query = qs.toString() ? `?${qs.toString()}` : "";
+    return request<{ jobs: Job[]; total: number; source?: string }>(`/api/jobs${query}`);
+  },
+
+  get: (id: string) => request<{ job: Job }>(`/api/jobs/${id}`),
+
+  create: (data: {
+    title: string;
+    company: string;
+    description?: string;
+    location?: string;
+    job_url?: string;
+    source?: string;
+  }) =>
+    request<{ job: Job }>("/api/jobs", { method: "POST", body: data }),
+
+  update: (id: string, data: Partial<Omit<Job, "id" | "created_at" | "posted_at">>) =>
+    request<{ job: Job }>(`/api/jobs/${id}`, { method: "PUT", body: data }),
+
+  delete: (id: string) =>
+    request<{ message: string }>(`/api/jobs/${id}`, { method: "DELETE" }),
+};
+
+// ─── Resumes ─────────────────────────────────────────────────────
+
+export const resumes = {
+  list: () => request<{ resumes: Resume[]; source?: string }>("/api/resumes"),
+
+  get: (id: string) => request<{ resume: Resume }>(`/api/resumes/${id}`),
+
+  create: (data: { name: string; file_url: string; version?: string; is_default?: boolean }) =>
+    request<{ resume: Resume }>("/api/resumes", { method: "POST", body: data }),
+
+  update: (id: string, data: Partial<Pick<Resume, "name" | "file_url" | "version" | "is_default">>) =>
+    request<{ resume: Resume }>(`/api/resumes/${id}`, { method: "PUT", body: data }),
+
+  setDefault: (id: string) =>
+    request<{ resume: Resume }>(`/api/resumes/${id}/default`, { method: "PATCH" }),
+
+  delete: (id: string) =>
+    request<{ message: string }>(`/api/resumes/${id}`, { method: "DELETE" }),
 };
 
 export { ApiError };
